@@ -1,6 +1,4 @@
 .category-filter {
-  background: var(--card-bg);
-  border-radius: var(--border-radius);
   padding: var(--spacing-md) 0;
   margin-bottom: var(--spacing-lg);
 }
