@@ -1,0 +1,96 @@
+.price-slider {
+  background: var(--card-bg);
+  border-radius: var(--border-radius);
+  padding: 1.5rem;
+  box-shadow: var(--shadow);
+  margin-top: 1.5rem;
+}
+
+.price-slider h3 {
+  color: var(--text-dark);
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  border-bottom: 2px solid var(--primary);
+  padding-bottom: 0.5rem;
+}
+
+.price-inputs {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.price-input {
+  flex: 1;
+}
+
+.price-input label {
+  display: block;
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 0.25rem;
+}
+
+.price-input input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.price-input input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(46, 125, 50, 0.2);
+}
+
+.slider-container {
+  position: relative;
+  height: 40px;
+  margin: 0 10px;
+}
+
+.slider {
+  position: absolute;
+  width: 100%;
+  height: 2px;
+  background: #ddd;
+  outline: none;
+  pointer-events: none;
+  -webkit-appearance: none;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  background: var(--primary);
+  border-radius: 50%;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: background 0.3s;
+}
+
+.slider::-webkit-slider-thumb:hover {
+  background: var(--primary-dark);
+}
+
+.slider.min {
+  z-index: 1;
+}
+
+.slider.max {
+  z-index: 2;
+}
+
+.slider.max::-webkit-slider-thumb {
+  background: var(--primary-dark);
+}
+
+@media (max-width: 768px) {
+  .price-inputs {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+} 
