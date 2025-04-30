@@ -5,33 +5,6 @@
   box-sizing: border-box;
 }
 
-:root {
-  --primary: #2e7d32;       /* Dark green */
-  --primary-light: #60ad5e; /* Medium green */
-  --primary-dark: #005005;  /* Very dark green */
-  --secondary: #8d6e63;     /* Earth brown */
-  --accent: #81c784;        /* Light green */
-  --text-dark: #263238;     /* Dark text */
-  --text-light: #ffffff;    /* Light text */
-  --error: #d32f2f;         /* Error red */
-  --error-light: #ffcdd2;   /* Light error background */
-  --success: #388e3c;       /* Success green */
-  --success-light: #c8e6c9; /* Light success background */
-  --background: #f5f5f5;    /* Light gray background */
-  --card-bg: #ffffff;       /* Card background */
-  --border-radius: 8px;     /* Border radius for cards/buttons */
-  --shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Standard shadow */
-}
-
-body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  line-height: 1.6;
-  color: var(--text-dark);
-  background-color: var(--background);
-  width: 100vw;
-  overflow-x: hidden;
-}
-
 /* Layout Styles */
 .layout-container {
   display: flex;

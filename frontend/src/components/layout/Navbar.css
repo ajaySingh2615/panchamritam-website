@@ -56,8 +56,17 @@
 .cart-icon {
   position: relative;
   color: var(--text-dark);
-  font-size: 1.2rem;
   text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cart-icon svg {
+  width: 24px;
+  height: 24px;
+  stroke: currentColor;
+  stroke-width: 2;
 }
 
 .cart-badge {
@@ -66,16 +75,15 @@
   right: -8px;
   background: var(--primary);
   color: white;
-  font-size: 0.75rem;
-  padding: 0.25rem 0.5rem;
+  font-size: 0.7rem;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
-  min-width: 20px;
-  min-height: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  text-align: center;
-  font-weight: bold;
+  font-weight: 700;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .user-menu {
