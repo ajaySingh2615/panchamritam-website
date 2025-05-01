@@ -14,10 +14,9 @@ const ProductCard = ({ product }) => {
   const {
     product_id,
     name,
-    description,
     price,
     image_url,
-    category_id,
+    category_name,
     quantity
   } = product;
 
@@ -27,11 +26,6 @@ const ProductCard = ({ product }) => {
     return null;
   }
 
-  const handleAddToCart = (e) => {
-    e.preventDefault();
-    addToCart(product);
-  };
-
   // Format price safely, ensuring it's a number
   const formatPrice = (price) => {
     // Convert to number if it's a string, or default to 0 if invalid
@@ -39,36 +33,68 @@ const ProductCard = ({ product }) => {
     return isNaN(numericPrice) ? '0.00' : numericPrice.toFixed(2);
   };
 
-  // Log product info on render to help debug
-  console.log('ProductCard rendering product:', {
-    id: product_id,
-    name, 
-    category_id
-  });
+  const displayCategory = category_name || "Groceries"; // Default to Groceries if no category
+  const isOutOfStock = quantity === 0 || quantity === undefined;
+  const isOnSale = price && price < 50; // Just an example condition for sale items
+
+  // Handle add to cart
+  const handleAddToCart = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isOutOfStock) {
+      addToCart(product);
+    }
+  };
 
   return (
-    <div className="product-card">
-      <Link to={`/product/${product_id}`} className="product-link">
-        <div className="product-image">
-          <img src={image_url || '/placeholder-product.jpg'} alt={name || 'Product'} />
-          {(quantity === 0 || quantity === undefined) && (
-            <div className="out-of-stock-badge">Out of Stock</div>
-          )}
+    <li className="product-card">
+      <div className="product-thumbnail-wrap">
+        {isOnSale && <span className="onsale">Sale!</span>}
+        {isOutOfStock && <span className="out-of-stock">Out of Stock</span>}
+        
+        <Link to={`/product/${product_id}`} className="product-link">
+          <img 
+            src={image_url || '/placeholder-product.jpg'} 
+            alt={name || 'Product'} 
+            className="product-image"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = '/placeholder-product.jpg';
+            }}
+            loading="lazy"
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          />
+        </Link>
+      </div>
+      
+      <div className="product-summary-wrap">
+        <span className="product-category">
+          {displayCategory}
+        </span>
+        
+        <Link to={`/product/${product_id}`} className="product-title-link">
+          <h2 className="product-title">{name || 'Unnamed Product'}</h2>
+        </Link>
+        
+        <div className="product-rating">
+          <div className="star-rating">
+            <span style={{ width: '0%' }}>★★★★★</span>
+          </div>
         </div>
-        <div className="product-info">
-          <h3 className="product-name">{name || 'Unnamed Product'}</h3>
-          <p className="product-description">{description || 'No description available'}</p>
-          <div className="product-price">${formatPrice(price)}</div>
-        </div>
-      </Link>
-      <button
-        className="add-to-cart-button"
-        onClick={handleAddToCart}
-        disabled={quantity === 0 || quantity === undefined}
-      >
-        {quantity === 0 || quantity === undefined ? 'Out of Stock' : 'Add to Cart'}
-      </button>
-    </div>
+        
+        <span className="product-price">
+          <span className="price-amount">£{formatPrice(price)}</span>
+        </span>
+        
+        <button 
+          onClick={handleAddToCart}
+          disabled={isOutOfStock}
+          className="add-to-cart-button"
+        >
+          Add to cart
+        </button>
+      </div>
+    </li>
   );
 };
 
