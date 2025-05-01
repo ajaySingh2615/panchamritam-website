@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../../contexts/CartContext';
 import './ProductCard.css';
@@ -10,15 +10,30 @@ const ProductCard = ({ product }) => {
     return null;
   }
 
-  const { addToCart } = useCart();
+  const { addToCart, updateCartItemQuantity, removeFromCart, cart } = useCart();
+  const [inCart, setInCart] = useState(false);
+  const [quantity, setQuantity] = useState(0);
+  
   const {
     product_id,
     name,
     price,
     image_url,
     category_name,
-    quantity
+    quantity: stockQuantity
   } = product;
+
+  // Check if item is in cart on mount and when cart changes
+  useEffect(() => {
+    const cartItem = cart.find(item => item.product_id === product_id);
+    if (cartItem) {
+      setInCart(true);
+      setQuantity(cartItem.quantity);
+    } else {
+      setInCart(false);
+      setQuantity(0);
+    }
+  }, [cart, product_id]);
 
   // Safety check for required fields
   if (!product_id) {
@@ -34,7 +49,7 @@ const ProductCard = ({ product }) => {
   };
 
   const displayCategory = category_name || "Groceries"; // Default to Groceries if no category
-  const isOutOfStock = quantity === 0 || quantity === undefined;
+  const isOutOfStock = stockQuantity === 0 || stockQuantity === undefined;
   const isOnSale = price && price < 50; // Just an example condition for sale items
 
   // Handle add to cart
@@ -43,6 +58,26 @@ const ProductCard = ({ product }) => {
     e.stopPropagation();
     if (!isOutOfStock) {
       addToCart(product);
+    }
+  };
+
+  // Increase quantity
+  const increaseQuantity = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (stockQuantity > quantity) {
+      updateCartItemQuantity(product_id, quantity + 1);
+    }
+  };
+
+  // Decrease quantity
+  const decreaseQuantity = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (quantity > 1) {
+      updateCartItemQuantity(product_id, quantity - 1);
+    } else {
+      removeFromCart(product_id);
     }
   };
 
@@ -76,23 +111,25 @@ const ProductCard = ({ product }) => {
           <h2 className="product-title">{name || 'Unnamed Product'}</h2>
         </Link>
         
-        <div className="product-rating">
-          <div className="star-rating">
-            <span style={{ width: '0%' }}>★★★★★</span>
-          </div>
-        </div>
-        
         <span className="product-price">
           <span className="price-amount">£{formatPrice(price)}</span>
         </span>
         
-        <button 
-          onClick={handleAddToCart}
-          disabled={isOutOfStock}
-          className="add-to-cart-button"
-        >
-          Add to cart
-        </button>
+        {!inCart ? (
+          <button 
+            onClick={handleAddToCart}
+            disabled={isOutOfStock}
+            className="add-to-cart-button"
+          >
+            Add to cart
+          </button>
+        ) : (
+          <div className="quantity-control">
+            <button onClick={decreaseQuantity} className="quantity-btn">-</button>
+            <span className="quantity">{quantity}</span>
+            <button onClick={increaseQuantity} className="quantity-btn">+</button>
+          </div>
+        )}
       </div>
     </li>
   );

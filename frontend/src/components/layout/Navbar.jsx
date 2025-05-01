@@ -8,7 +8,7 @@ const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user, logout } = useAuth();
-  const { cartItems } = useCart();
+  const { cart, getCartCount } = useCart();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -61,7 +61,7 @@ const Navbar = () => {
               <circle cx="20" cy="21" r="1"></circle>
               <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
             </svg>
-            <span className="cart-badge">{cartItems.length}</span>
+            <span className="cart-badge">{getCartCount()}</span>
           </Link>
 
           {user ? (
