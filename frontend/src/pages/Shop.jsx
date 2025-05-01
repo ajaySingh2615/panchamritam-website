@@ -15,10 +15,21 @@ const Shop = () => {
   const [sortOption, setSortOption] = useState('default');
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showFilters, setShowFilters] = useState(window.innerWidth > 768);
   const productsPerPage = 9;
   
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Handle window resize to show/hide filters based on screen width
+  useEffect(() => {
+    const handleResize = () => {
+      setShowFilters(window.innerWidth > 768);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Parse URL search params
   const searchParams = new URLSearchParams(location.search);
@@ -193,13 +204,27 @@ const Shop = () => {
   const firstProductShown = filteredProducts.length ? indexOfFirstProduct + 1 : 0;
   const lastProductShown = Math.min(indexOfLastProduct, filteredProducts.length);
 
+  // Toggle filters visibility on mobile
+  const toggleFilters = () => {
+    setShowFilters(!showFilters);
+  };
+
   return (
     <div className="shop-page">
       <div className="shop-container">
+        {/* Mobile Filter Toggle */}
+        <button className="filter-toggle" onClick={toggleFilters}>
+          {showFilters ? 'Hide Filters' : 'Show Filters'} 
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 6h18"></path>
+            <path d="M6 12h12"></path>
+            <path d="M9 18h6"></path>
+          </svg>
+        </button>
+
         {/* Left Sidebar with Filters */}
-        <aside className="shop-sidebar">
+        <aside className={`shop-sidebar ${showFilters ? 'visible' : 'hidden'}`}>
           <div className="search-filter">
-            <h3>Search Products</h3>
             <div className="search-input-container">
               <input
                 type="text"
@@ -208,16 +233,17 @@ const Shop = () => {
                 onChange={handleSearchChange}
                 className="search-input"
               />
-              <button className="search-button">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                  <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+              <button className="search-button" aria-label="Search">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12h14"></path>
+                  <path d="M12 5l7 7-7 7"></path>
                 </svg>
               </button>
             </div>
           </div>
           
-          <CategoryFilter categories={categories} />
           <PriceSlider minPrice={0} maxPrice={1000} />
+          <CategoryFilter categories={categories} />
         </aside>
 
         {/* Main Content Area */}

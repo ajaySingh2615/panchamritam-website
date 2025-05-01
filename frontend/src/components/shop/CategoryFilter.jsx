@@ -25,7 +25,6 @@ const CategoryFilter = ({ categories }) => {
 
   return (
     <div className="category-filter">
-      <h3>Categories</h3>
       <ul className="category-list">
         {categories.map((category) => (
           <li
@@ -33,8 +32,9 @@ const CategoryFilter = ({ categories }) => {
             className={`category-item ${currentCategory === category.category_id.toString() ? 'active' : ''}`}
             onClick={() => handleCategoryClick(category.category_id.toString())}
           >
-            <span className="category-name">{category.name}</span>
-            <span className="category-count">({category.product_count || 0})</span>
+            <div className="category-name-with-count">
+              {category.name}<span className="category-count">({category.product_count || 0})</span>
+            </div>
           </li>
         ))}
       </ul>
