@@ -33,12 +33,13 @@ export const CartProvider = ({ children }) => {
       if (existingItem) {
         return prevItems.map(item =>
           item.product_id === product.product_id
-            ? { ...item, quantity: item.quantity + (product.quantity || 1) }
+            ? { ...item, quantity: item.quantity + 1 }
             : item
         );
       }
       
-      return [...prevItems, { ...product, quantity: product.quantity || 1 }];
+      // Always set the initial quantity to 1 for new items
+      return [...prevItems, { ...product, quantity: 1 }];
     });
   };
 

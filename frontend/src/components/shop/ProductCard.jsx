@@ -57,7 +57,12 @@ const ProductCard = ({ product }) => {
     e.preventDefault();
     e.stopPropagation();
     if (!isOutOfStock) {
-      addToCart(product);
+      // Make a copy of the product with initial quantity of 1
+      const productToAdd = {
+        ...product,
+        quantity: 1
+      };
+      addToCart(productToAdd);
     }
   };
 
@@ -77,14 +82,18 @@ const ProductCard = ({ product }) => {
     if (quantity > 1) {
       updateCartItemQuantity(product_id, quantity - 1);
     } else {
+      // When quantity reaches 0, remove from cart
+      // This will trigger the useEffect to set inCart to false
       removeFromCart(product_id);
+      setInCart(false);
+      setQuantity(0);
     }
   };
 
   return (
     <li className="product-card">
       <div className="product-thumbnail-wrap">
-        {isOnSale && <span className="onsale">Sale!</span>}
+        {isOnSale && <span className="onsale">Sale</span>}
         {isOutOfStock && <span className="out-of-stock">Out of Stock</span>}
         
         <Link to={`/product/${product_id}`} className="product-link">
