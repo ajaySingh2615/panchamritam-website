@@ -1,111 +1,126 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import ProductCard from '../shop/ProductCard';
-import { API_ENDPOINTS } from '../../config/api';
+import { API_ENDPOINTS, API_URL } from '../../config/api';
+import { checkBackendConnection, testApiCall } from '../../utils/apiUtils';
 import './ReviewTabs.css';
 
+// Star Rating component for better interactivity
+const StarRating = ({ rating, setRating }) => {
+  const [hoverRating, setHoverRating] = useState(0);
+  
+  return (
+    <div className="rating-selector">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <span
+          key={star}
+          className={`star ${star <= (hoverRating || rating) ? 'selected' : ''}`}
+          onClick={() => setRating(star)}
+          onMouseEnter={() => setHoverRating(star)}
+          onMouseLeave={() => setHoverRating(0)}
+        >
+          ★
+        </span>
+      ))}
+    </div>
+  );
+};
+
 const ReviewTabs = ({ productId }) => {
-  // Remove activeTab state since we'll show both sections
+  const { user, token } = useAuth();
   const [reviews, setReviews] = useState([]);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState('reviews');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [reviewStats, setReviewStats] = useState({
+    average_rating: 0,
+    total_reviews: 0,
+    five_star: 0,
+    four_star: 0,
+    three_star: 0,
+    two_star: 0,
+    one_star: 0
+  });
+  
+  // Form state
+  const [rating, setRating] = useState(5);
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formError, setFormError] = useState(null);
+  const [success, setSuccess] = useState(null);
+
+  // Check if user is authenticated
+  useEffect(() => {
+    const storedToken = localStorage.getItem('token');
+    setIsLoggedIn(!!storedToken || !!token);
+    
+    console.log('Auth status:', { 
+      hasToken: !!storedToken, 
+      contextToken: !!token, 
+      user: !!user 
+    });
+  }, [token, user]);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch reviews
+      try {
+        const reviewsResponse = await fetch(`${API_ENDPOINTS.REVIEWS}/product/${productId}`);
+        
+        if (reviewsResponse.ok) {
+          const reviewsData = await reviewsResponse.json();
+          console.log('API returned reviews:', reviewsData.data.reviews);
+          
+          if (reviewsData.data && reviewsData.data.reviews) {
+            setReviews(reviewsData.data.reviews);
+          }
+          
+          if (reviewsData.data && reviewsData.data.stats) {
+            setReviewStats(reviewsData.data.stats);
+          }
+        }
+      } catch (reviewsError) {
+        console.warn('Could not fetch reviews:', reviewsError);
+      }
+      
+      // Fetch related products
+      try {
+        const relatedResponse = await fetch(`${API_ENDPOINTS.PRODUCTS}/${productId}/related`);
+        
+        if (relatedResponse.ok) {
+          const relatedData = await relatedResponse.json();
+          
+          // Handle different possible structures for related products
+          let relatedProductsData = [];
+          
+          if (relatedData.data) {
+            if (relatedData.data.products && Array.isArray(relatedData.data.products)) {
+              relatedProductsData = relatedData.data.products;
+            } else if (Array.isArray(relatedData.data)) {
+              relatedProductsData = relatedData.data;
+            }
+          }
+          
+          setRelatedProducts(relatedProductsData);
+        }
+      } catch (relatedError) {
+        console.warn('Could not fetch related products:', relatedError);
+      }
+    } catch (err) {
+      console.error('Error fetching product data:', err);
+      setError('Could not load product information. ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        
-        // Log what we're trying to fetch
-        console.log('Attempting to fetch reviews and related products for:', productId);
-        
-        // Safer fetch with proper error handling
-        const fetchWithErrorHandling = async (url) => {
-          try {
-            console.log('Fetching from URL:', url);
-            const response = await fetch(url);
-            
-            if (!response.ok) {
-              console.error('Error response:', response.status, response.statusText);
-              return { error: `Server returned ${response.status}: ${response.statusText}` };
-            }
-            
-            // Check content type before parsing
-            const contentType = response.headers.get('content-type');
-            if (!contentType || !contentType.includes('application/json')) {
-              console.error('Non-JSON response received:', contentType);
-              return { error: 'Server returned non-JSON response' };
-            }
-            
-            const data = await response.json();
-            return { data };
-          } catch (err) {
-            console.error('Fetch error:', err);
-            return { error: err.message };
-          }
-        };
-
-        // Use the correct API endpoints
-        // Temporarily use placeholder data if endpoints don't exist yet
-        let reviewsResult = { data: { reviews: [] } };
-        let relatedResult = { data: { products: [] } };
-        
-        try {
-          // For now, we only fetch related products as we haven't implemented reviews yet
-          // reviewsResult = await fetchWithErrorHandling(`${API_ENDPOINTS.PRODUCTS}/${productId}/reviews`);
-          relatedResult = await fetchWithErrorHandling(`${API_ENDPOINTS.PRODUCTS}/${productId}/related`);
-          
-          // Debug - log the related products response
-          console.log('Related products API response:', relatedResult);
-        } catch (err) {
-          console.warn('API endpoints for reviews/related not implemented yet:', err);
-        }
-        
-        // Set data or empty arrays if error
-        setReviews(reviewsResult.data?.reviews || []);
-        
-        // Handle different possible structures for related products
-        let relatedProductsData = [];
-        console.log('Processing relatedResult:', relatedResult);
-        
-        if (relatedResult.data) {
-          // Log full data structure for debugging
-          console.log('Full related data structure:', JSON.stringify(relatedResult.data));
-          
-          // Check all possible nesting levels
-          if (relatedResult.data.data && Array.isArray(relatedResult.data.data.products)) {
-            // Structure: relatedResult.data.data.products
-            console.log('Found products at data.data.products');
-            relatedProductsData = relatedResult.data.data.products;
-          } else if (relatedResult.data.data && Array.isArray(relatedResult.data.data)) {
-            // Structure: relatedResult.data.data
-            console.log('Found products at data.data');
-            relatedProductsData = relatedResult.data.data;
-          } else if (Array.isArray(relatedResult.data.products)) {
-            // Structure: relatedResult.data.products
-            console.log('Found products at data.products');
-            relatedProductsData = relatedResult.data.products;
-          } else if (Array.isArray(relatedResult.data)) {
-            // Structure: relatedResult.data
-            console.log('Found products at data');
-            relatedProductsData = relatedResult.data;
-          }
-        }
-        
-        console.log('Related products data after extraction:', relatedProductsData);
-        setRelatedProducts(relatedProductsData);
-        
-        if (reviewsResult.error || relatedResult.error) {
-          console.warn('Some data could not be loaded:', reviewsResult.error, relatedResult.error);
-        }
-      } catch (err) {
-        console.error('Review tabs error:', err);
-        setError('Could not load product information. ' + err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     if (productId) {
       fetchData();
     } else {
@@ -113,6 +128,99 @@ const ReviewTabs = ({ productId }) => {
       setError('No product ID available');
     }
   }, [productId]);
+
+  // Format date
+  const formatDate = (dateString) => {
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    return new Date(dateString).toLocaleDateString(undefined, options);
+  };
+
+  // Handle form submission
+  const handleSubmitReview = async (e) => {
+    e.preventDefault();
+    
+    if (!isLoggedIn) {
+      setFormError('Please log in to submit a review');
+      return;
+    }
+    
+    if (rating < 1 || rating > 5) {
+      setFormError('Rating must be between 1 and 5');
+      return;
+    }
+    
+    try {
+      setIsSubmitting(true);
+      setFormError(null);
+      setSuccess(null);
+      
+      const storedToken = localStorage.getItem('token');
+      const apiUrl = `${API_URL}/reviews/product/${productId}`;
+      console.log('Submitting review to:', apiUrl);
+      
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${storedToken}`
+        },
+        body: JSON.stringify({
+          rating,
+          title: title || 'Review',
+          content
+        })
+      });
+      
+      const responseData = await response.json();
+      console.log('Review submission response:', responseData);
+      
+      if (response.ok) {
+        setSuccess('Your review has been submitted successfully!');
+        
+        // Create a new review object and add it to the list immediately
+        const now = new Date().toISOString();
+        const newReview = {
+          review_id: `temp-${Date.now()}`,
+          product_id: parseInt(productId),
+          user_id: user?.user_id,
+          user_name: user?.name || 'You',
+          user_profile_picture: user?.profile_picture || '/default-avatar.png',
+          rating,
+          title: title || 'Review',
+          content,
+          created_at: now,
+          updated_at: now
+        };
+        
+        console.log('Adding new review to state:', newReview);
+        
+        // Directly update the reviews state with the new review
+        setReviews(prevReviews => {
+          const updatedReviews = [newReview, ...(prevReviews || [])];
+          console.log('Updated reviews list:', updatedReviews);
+          return updatedReviews;
+        });
+        
+        // Reset form
+        setRating(5);
+        setTitle('');
+        setContent('');
+        
+        // Switch to reviews tab
+        setActiveTab('reviews');
+        
+        // Refresh the data from server
+        fetchData();
+      } else {
+        throw new Error(responseData.message || 'Failed to submit review');
+      }
+    } catch (error) {
+      console.error('Review submission error:', error);
+      setFormError(error.message || 'An error occurred while submitting your review');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -131,63 +239,192 @@ const ReviewTabs = ({ productId }) => {
         </div>
       )}
       
-      {/* Reviews Section */}
-      <div className="section reviews-section">
-        <h2 className="section-title">Reviews</h2>
-        {reviews.length === 0 ? (
-          <p className="no-reviews">No reviews yet. Be the first to review this product!</p>
-        ) : (
-          <div className="reviews-list">
-            {reviews.map((review) => (
-              <div key={review.review_id || review.id} className="review-card">
-                <div className="review-header">
-                  <div className="reviewer-info">
-                    <img 
-                      src={review.user_profile_picture || '/default-avatar.png'} 
-                      alt={review.user_name || 'Reviewer'}
-                      className="reviewer-avatar"
-                    />
-                    <div>
-                      <h4>{review.user_name || 'Anonymous'}</h4>
-                      <div className="review-rating">
-                        {[...Array(5)].map((_, index) => (
-                          <span
-                            key={index}
-                            className={`star ${index < (review.rating || 0) ? 'filled' : ''}`}
-                          >
-                            ★
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                  <span className="review-date">
-                    {review.created_at ? new Date(review.created_at).toLocaleDateString() : 'Unknown date'}
-                  </span>
-                </div>
-                <p className="review-content">{review.content || review.text || 'No comment'}</p>
-              </div>
-            ))}
-          </div>
-        )}
+      <div className="tab-buttons">
+        <button 
+          className={`tab-button ${activeTab === 'reviews' ? 'active' : ''}`}
+          onClick={() => setActiveTab('reviews')}
+        >
+          Reviews ({reviews.length})
+        </button>
+        <button 
+          className={`tab-button ${activeTab === 'write' ? 'active' : ''}`}
+          onClick={() => setActiveTab('write')}
+        >
+          Write a Review
+        </button>
+        <button 
+          className={`tab-button ${activeTab === 'related' ? 'active' : ''}`}
+          onClick={() => setActiveTab('related')}
+        >
+          Related Products
+        </button>
       </div>
       
-      {/* Related Products Section */}
-      <div className="section related-products-section">
-        <h2 className="section-title">Related Products</h2>
-        {console.log('Rendering related products section with data:', relatedProducts)}
-        {relatedProducts.length === 0 ? (
-          <p className="no-related">No related products found.</p>
-        ) : (
-          <div className="related-products-grid">
-            {relatedProducts.map((product) => {
-              console.log('Rendering related product:', product);
-              return (
-                <ProductCard key={product.product_id} product={product} />
-              );
-            })}
+      <div className="tab-content">
+        {/* Reviews Tab */}
+        <div className={`tab-pane ${activeTab === 'reviews' ? 'active' : ''}`}>
+          {console.log('Rendering reviews tab, reviews:', reviews)}
+          
+          {reviews.length === 0 ? (
+            <p className="no-reviews">No reviews yet. Be the first to review this product!</p>
+          ) : (
+            <>
+              {/* Review stats section */}
+              <div className="review-stats">
+                <div className="average-rating">
+                  <span className="big-rating">{parseFloat(reviewStats.average_rating || 0).toFixed(1)}</span>
+                  <div className="stars-summary">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <span
+                        key={star}
+                        className={`star ${star <= Math.round(reviewStats.average_rating || 0) ? 'filled' : ''}`}
+                      >
+                        ★
+                      </span>
+                    ))}
+                    <span className="review-count">({reviewStats.total_reviews || 0} reviews)</span>
+                  </div>
+                </div>
+                
+                <div className="rating-bars">
+                  {[5, 4, 3, 2, 1].map((stars) => {
+                    const count = reviewStats[`${stars}_star`] || 0;
+                    const percentage = reviewStats.total_reviews > 0 
+                      ? (count / reviewStats.total_reviews) * 100 
+                      : 0;
+                    
+                    return (
+                      <div key={stars} className="rating-bar-row">
+                        <div className="stars-label">{stars} stars</div>
+                        <div className="rating-bar-container">
+                          <div 
+                            className="rating-bar-fill"
+                            style={{ width: `${percentage}%` }}
+                          ></div>
+                        </div>
+                        <div className="rating-count">{count}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              
+              {/* Reviews list */}
+              <div className="reviews-list">
+                {reviews.map((review, index) => {
+                  console.log(`Rendering review ${index}:`, review);
+                  return (
+                    <div key={review.review_id || index} className="review-card">
+                      <div className="review-header">
+                        <div className="reviewer-info">
+                          <img 
+                            src={review.user_profile_picture || '/default-avatar.png'} 
+                            alt={review.user_name || 'Reviewer'}
+                            className="reviewer-avatar"
+                          />
+                          <div>
+                            <h4>{review.user_name || 'Anonymous'}</h4>
+                            <div className="review-rating">
+                              {[...Array(5)].map((_, index) => (
+                                <span
+                                  key={index}
+                                  className={`star ${index < review.rating ? 'filled' : ''}`}
+                                >
+                                  ★
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                        <span className="review-date">
+                          {formatDate(review.created_at)}
+                        </span>
+                      </div>
+                      
+                      {review.title && <h3 className="review-title">{review.title}</h3>}
+                      <p className="review-content">{review.content}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </div>
+        
+        {/* Write Review Tab */}
+        <div className={`tab-pane ${activeTab === 'write' ? 'active' : ''}`}>
+          <div className="review-form-container">
+            {!isLoggedIn ? (
+              <div className="login-prompt">
+                <p>Please <Link to="/login">login</Link> to leave a review</p>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmitReview} className="review-form">
+                <h3>Write a Review</h3>
+                
+                {formError && <div className="error-message">{formError}</div>}
+                {success && <div className="success-message">{success}</div>}
+                
+                <div className="form-group">
+                  <label>Rating</label>
+                  <StarRating rating={rating} setRating={setRating} />
+                  <div className="rating-text">
+                    {rating === 1 && "Poor"}
+                    {rating === 2 && "Fair"}
+                    {rating === 3 && "Good"}
+                    {rating === 4 && "Very Good"}
+                    {rating === 5 && "Excellent"}
+                  </div>
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="review-title">Review Title</label>
+                  <input
+                    type="text"
+                    id="review-title"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="Summarize your experience (optional)"
+                    maxLength="100"
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="review-content">Your Review</label>
+                  <textarea
+                    id="review-content"
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                    placeholder="What did you like or dislike about this product?"
+                    rows="4"
+                    maxLength="1000"
+                  ></textarea>
+                </div>
+                
+                <button
+                  type="submit"
+                  className="submit-review-button"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Submitting...' : 'Submit Review'}
+                </button>
+              </form>
+            )}
           </div>
-        )}
+        </div>
+        
+        {/* Related Products Tab */}
+        <div className={`tab-pane ${activeTab === 'related' ? 'active' : ''}`}>
+          {relatedProducts.length === 0 ? (
+            <p className="no-related">No related products found.</p>
+          ) : (
+            <div className="related-products-grid">
+              {relatedProducts.map((product) => (
+                <ProductCard key={product.product_id} product={product} />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

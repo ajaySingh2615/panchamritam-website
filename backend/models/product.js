@@ -50,6 +50,27 @@ class Product {
     }
   }
 
+  static async findBySku(sku) {
+    try {
+      if (!sku) {
+        return null;
+      }
+      
+      const [rows] = await pool.execute(
+        `SELECT p.*, c.name as category_name 
+         FROM Products p 
+         LEFT JOIN Categories c ON p.category_id = c.category_id
+         WHERE p.sku = ?`,
+        [sku]
+      );
+      
+      return rows[0];
+    } catch (error) {
+      console.error('Error in Product.findBySku:', error);
+      throw error;
+    }
+  }
+
   static async findByCategory(categoryId, limit = 20, offset = 0) {
     try {
       console.log('Finding products in category:', categoryId);

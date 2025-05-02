@@ -117,7 +117,26 @@ exports.getProductsByCategory = async (req, res, next) => {
 // Create new product (admin only)
 exports.createProduct = async (req, res, next) => {
   try {
-    const { name, description, price, quantity, categoryId, imageUrl } = req.body;
+    const { 
+      name, 
+      description,
+      short_description,
+      price, 
+      regular_price,
+      quantity, 
+      categoryId,
+      brand,
+      sku,
+      imageUrl,
+      free_shipping,
+      shipping_time,
+      warranty_period,
+      eco_friendly,
+      eco_friendly_details,
+      tags,
+      is_featured,
+      status
+    } = req.body;
     
     // Validation
     if (!name || !price || !categoryId) {
@@ -130,14 +149,34 @@ exports.createProduct = async (req, res, next) => {
       return next(new AppError('Category not found', 404));
     }
     
-    // Create product
+    // Check if SKU exists
+    if (sku) {
+      const existingSku = await Product.findBySku(sku);
+      if (existingSku) {
+        return next(new AppError('SKU already exists', 400));
+      }
+    }
+    
+    // Create product with all fields
     const newProduct = await Product.create({
       name,
       description,
+      short_description: short_description || (description ? description.substring(0, 150) : null),
       price,
+      regular_price: regular_price || price,
       quantity: quantity || 0,
       categoryId,
+      brand: brand || 'GreenMagic',
+      sku: sku || `GM-${Date.now()}`, // Generate unique SKU if not provided
       imageUrl: imageUrl || null,
+      free_shipping: free_shipping || false,
+      shipping_time: shipping_time || '3-5 business days',
+      warranty_period: warranty_period || null,
+      eco_friendly: eco_friendly !== undefined ? eco_friendly : true,
+      eco_friendly_details: eco_friendly_details || 'Eco-friendly packaging',
+      tags: tags || '',
+      is_featured: is_featured || false,
+      status: status || 'active',
       createdBy: req.user.user_id
     });
     
@@ -159,7 +198,28 @@ exports.createProduct = async (req, res, next) => {
 exports.updateProduct = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { name, description, price, quantity, categoryId, imageUrl } = req.body;
+    const { 
+      name, 
+      description, 
+      short_description,
+      price, 
+      regular_price,
+      quantity, 
+      categoryId, 
+      brand,
+      sku,
+      imageUrl,
+      free_shipping,
+      shipping_time,
+      warranty_period,
+      eco_friendly,
+      eco_friendly_details,
+      rating,
+      review_count,
+      tags,
+      is_featured,
+      status
+    } = req.body;
     
     // Check if product exists
     const product = await Product.findById(id);
@@ -175,14 +235,36 @@ exports.updateProduct = async (req, res, next) => {
       }
     }
     
-    // Prepare update data
+    // If updating SKU, check it doesn't conflict
+    if (sku && sku !== product.sku) {
+      const existingSku = await Product.findBySku(sku);
+      if (existingSku && existingSku.product_id !== parseInt(id)) {
+        return next(new AppError('SKU already exists', 400));
+      }
+    }
+    
+    // Prepare update data with all fields
     const updateData = {};
     if (name !== undefined) updateData.name = name;
     if (description !== undefined) updateData.description = description;
+    if (short_description !== undefined) updateData.short_description = short_description;
     if (price !== undefined) updateData.price = price;
+    if (regular_price !== undefined) updateData.regular_price = regular_price;
     if (quantity !== undefined) updateData.quantity = quantity;
     if (categoryId !== undefined) updateData.categoryId = categoryId;
+    if (brand !== undefined) updateData.brand = brand;
+    if (sku !== undefined) updateData.sku = sku;
     if (imageUrl !== undefined) updateData.imageUrl = imageUrl;
+    if (free_shipping !== undefined) updateData.free_shipping = free_shipping;
+    if (shipping_time !== undefined) updateData.shipping_time = shipping_time;
+    if (warranty_period !== undefined) updateData.warranty_period = warranty_period;
+    if (eco_friendly !== undefined) updateData.eco_friendly = eco_friendly;
+    if (eco_friendly_details !== undefined) updateData.eco_friendly_details = eco_friendly_details;
+    if (rating !== undefined) updateData.rating = rating;
+    if (review_count !== undefined) updateData.review_count = review_count;
+    if (tags !== undefined) updateData.tags = tags;
+    if (is_featured !== undefined) updateData.is_featured = is_featured;
+    if (status !== undefined) updateData.status = status;
     
     // Update product
     const updatedProduct = await Product.update(id, updateData);

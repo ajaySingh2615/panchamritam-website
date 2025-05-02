@@ -31,12 +31,18 @@ switch (ENV) {
     BASE_API_URL = DEV_API_URL;
 }
 
+// Debug the base URL being used
+console.log('API Base URL:', BASE_API_URL);
+
 // Export API URL configurations
 export const API_URL = BASE_API_URL;
 
 // Helper function to create full API URLs
 export const createApiUrl = (endpoint) => {
-  return `${BASE_API_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+  const url = `${BASE_API_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+  // Debug generated URLs
+  console.log(`Created API URL for ${endpoint}: ${url}`);
+  return url;
 };
 
 // Auth-specific endpoints
@@ -55,6 +61,7 @@ export const API_ENDPOINTS = {
   ORDERS: createApiUrl('/orders'),
   BLOGS: createApiUrl('/blogs'),
   CONTACT: createApiUrl('/contact'),
+  REVIEWS: createApiUrl('/reviews'),
 };
 
 export default {
