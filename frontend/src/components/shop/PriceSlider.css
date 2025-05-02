@@ -1,5 +1,9 @@
 .price-slider {
   margin-bottom: 1rem;
+  width: 100%;
+  overflow: hidden;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 .price-slider h3 {
@@ -11,11 +15,14 @@
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  width: 100%;
 }
 
 /* Single slider container */
 .single-slider-container {
   margin-bottom: 0.5rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .slider-label {
@@ -35,6 +42,7 @@
   background: #ddd;
   outline: none;
   margin: 0.3rem 0;
+  box-sizing: border-box;
 }
 
 /* Styling the thumb for Webkit browsers */
@@ -68,10 +76,13 @@
   justify-content: space-between;
   gap: 5px;
   margin-top: 0.3rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .price-input {
   flex: 1;
+  box-sizing: border-box;
 }
 
 .price-input input {
@@ -82,6 +93,7 @@
   font-size: 0.8rem;
   color: #333;
   background-color: #f8f6f3;
+  box-sizing: border-box;
 }
 
 .price-input input:focus {
@@ -121,16 +133,20 @@
 @media (max-width: 768px) {
   .price-slider {
     margin-bottom: 1.5rem;
+    width: 100%;
+    padding: 0 0.5rem;
   }
   
   .price-slider h3 {
     font-size: 1rem;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
+    width: 100%;
   }
   
   .price-inputs {
     flex-direction: row;
     gap: 0.4rem;
+    width: 100%;
   }
   
   .price-separator {
@@ -145,6 +161,17 @@
   .price-input input {
     padding: 6px 10px;
     font-size: 0.9rem;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .single-slider-container {
+    width: 100%;
+    padding: 0;
+  }
+  
+  .single-slider {
+    width: 100%;
   }
   
   .single-slider::-webkit-slider-thumb {
@@ -161,6 +188,7 @@
 @media (max-width: 480px) {
   .price-slider {
     margin-bottom: 1.2rem;
+    padding: 0 0.5rem;
   }
   
   .price-input input {
@@ -170,6 +198,14 @@
   
   .slider-label {
     font-size: 0.9rem;
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 0.3rem;
+  }
+  
+  .single-slider-container {
+    margin-bottom: 1rem;
   }
   
   .single-slider::-webkit-slider-thumb {
@@ -180,5 +216,25 @@
   .single-slider::-moz-range-thumb {
     width: 20px;
     height: 20px;
+  }
+  
+  .price-inputs {
+    margin-top: 1rem;
+  }
+}
+
+/* Additional styles for very small screens */
+@media (max-width: 360px) {
+  .price-slider h3 {
+    font-size: 0.95rem;
+  }
+  
+  .price-input input {
+    padding: 6px 8px;
+    font-size: 0.9rem;
+  }
+  
+  .slider-label {
+    font-size: 0.8rem;
   }
 } 
